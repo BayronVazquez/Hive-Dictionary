@@ -9,7 +9,7 @@ int main()
 {
     Dictionary dic;
     dic.setCharset("0123456789");   // Indicamos los caracteres que queremos usar para generar las combinaciones
-    dic.setInitialWord("000000");
+    dic.setInitialWord("0000");
 //    dic.setPasswordLenght(4);       // Indicamos la longitud de las palabras generadas por el diccionario
 
     cout << "Charset: " << dic.getCharset() << endl;

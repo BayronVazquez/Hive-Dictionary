@@ -17,17 +17,20 @@ size_t Dictionary::findChar(const char &caracter){
             return i;
         }
     }
-    return (size_t) - 1;
+    return (size_t) - 1;    // Un truco que hace que retorne #FFFFFF es decir el valor maximo que puede tener size_t en caso de error
 }
+
 void Dictionary::calculateInitialWord(){
 
 }
+
 void Dictionary::calculateLimitOfWords(){
     // Numero Total de Combinaciones = (Longitud de Charset) ^ (Longitud del Password)
     numeroTotalDeCombinaciones = pow(charset_lenght, word_lenght);
-    cout << "Potencia: "<< charset_lenght <<" al " << word_lenght << endl;
     // Limite de combinaciones = (Numero Total de Combinaciones) / (Numero de Nodos)
     limit_of_words = numeroTotalDeCombinaciones / nodeNumber;
+
+    cout << "Potencia: "<< charset_lenght <<" al " << word_lenght << endl;
     cout << "Numero de Combinaciones: " << numeroTotalDeCombinaciones << endl;
     cout << "Limite de Palabras: " << limit_of_words << endl;
 }
@@ -40,7 +43,7 @@ unsigned short int Dictionary::getNodeNumber(){ return nodeNumber; }
 size_t Dictionary::getPasswordLenght(){ return word_lenght; }
 
 // Setters
-void Dictionary::setPasswordLenght( size_t lenght){ (word_lenght == 0) ? lenght: word_lenght; }
+void Dictionary::setPasswordLenght( size_t lenght){ (word_lenght == 0) ? lenght : word_lenght; }
 void Dictionary::setNodeNumber(unsigned short int number){(number == 0) ? 1 : this->nodeNumber = number; }
 void Dictionary::setLimitOfWords( unsigned long long limit){ this->limit_of_words = limit; }
 
@@ -51,22 +54,20 @@ void Dictionary::setCharset(const string &charset){
 }
 
 bool Dictionary::setInitialWord(const string &word){
-    // Paso 1: Validar que la palabra incial tenga los caracteres del charset
-    //PENDIENTE COMPLETAR EL CODIGO
-//    for(auto charInWord = word.begin(); charInWord != word.end(); charInWord++){
-//        for(size_t i = 0; i < charset_lenght; i++){
-//            if(*charInWord == charset[i]){
-//            }
-//        }
-//    }
+
     this->word = (char *) malloc( word.size() );
     word_lenght = word.size();
     strcpy(this->word, word.c_str() );
     this->Position = this->word_lenght - 1;
+    size_t index;
 
-    // Recorremos la palabra para rellenar el array de posiciones
-    for(size_t i = 0; i < word_lenght; i++){
-        charsetPos[i] = findChar( word.at(i) );
+    for(size_t i = 0; i < word_lenght; i++){    // Recorremos la palabra para rellenar el array de posiciones
+        index = findChar(word.at(i));           // Pedimos el indice del char en el array charset
+        if( index == ((size_t)-1)){             // Si no encuentra el caracter
+            return false;
+        }else{
+            charsetPos[i] = index;
+        }
     }
     return true;
 }
@@ -83,9 +84,8 @@ int Dictionary::createDictionary(){
 
     if(charset != nullptr ){
         //fichero.open(nombre_diccionario.c_str());
-        //Inicializamos todos los valores a 0
         /*
-        for(size_t i = 0; i < word_lenght; i++){
+        for(size_t i = 0; i < word_lenght; i++){        //CharsetPos Indica el indice en el array de charset, apunta a un char
             charsetPos[i] = 0;
         }
         */
@@ -93,34 +93,27 @@ int Dictionary::createDictionary(){
 
             anidado:    // Si el caracter apuntado no ha llegado al final del charset
 
-            if(Position == ((size_t)-1 )){  //Si se alcanzo el limite de posibles passwords con la longitud actual se acaba el bucle
+            if(Position == ( (size_t) - 1 ))  //Si se alcanzo el limite de posibles passwords con la longitud actual se acaba el bucle
                 break;
-            }
-            //apuntamos al sig caracter del charset
-            charsetPos[Position]++;
-            //Si no se ha llegado al final de charset
-            if( charsetPos[Position] < charset_lenght ){
-                // se le asigna a word el caracter (es la nueva conbinacion del password)
-                word[ Position ] = charset[ charsetPos[Position] ];
-            }else {
-                // sino reiniciamos el contador para que apunte al primer char de nuevo
-                charsetPos[Position] = 0;
-                // se le asigna a word el caracter (es la nueva conbinacion del password)
-                word[ Position ] = charset[ charsetPos[Position] ];
-                //Cambiamos la posicion del nivel de profundidad (apuntamos a un caracter mas atras)
-                Position--;
-                //Hacemos lo mismo de manera recursiva
-                goto anidado;
-            }
-            //imprimimos o escribimos la palabra en el stream deseado
-            cout << word << endl;
-            //fichero << word << endl;
 
-            //contabilizamos la cantidad de passwords escritos para tener un limite exacto
-            qty_words_calculated++;
-            if(Position < word_lenght -1){
-                Position = word_lenght -1;
+            ++charsetPos[Position];                                     //apuntamos al sig caracter del charset
+
+            if( charsetPos[Position] < charset_lenght ){                //Si no se ha llegado al final de charset
+                word[ Position ] = charset[ charsetPos[Position] ];     // se le asigna a word el caracter (es la nueva conbinacion de la palabra)
+            }else {
+                charsetPos[Position] = 0;                               // sino reiniciamos el contador para que apunte al primer char de nuevo
+                word[ Position ] = charset[ charsetPos[Position] ];     // se le asigna a word el caracter (es la nueva conbinacion del password)
+                --Position;                                             //Cambiamos la posicion del nivel de profundidad (apuntamos a un caracter mas atras)
+                goto anidado;                                           //Hacemos lo mismo de manera recursiva
             }
+
+            cout << word << endl;
+            //fichero << word << endl;                                  //Se envian los datos al stream deseado
+
+            --qty_words_calculated;                                     //contabilizamos la cantidad de passwords escritos para tener un limite exacto
+
+            if(Position < word_lenght -1)
+                Position = word_lenght -1;
         }
         //fichero.close();
     }
